@@ -1,0 +1,158 @@
+import type { z } from "zod";
+
+// ── Providers ──────────────────────────────────────────────
+
+export type Provider = "anthropic" | "openai";
+
+// ── Thinking ───────────────────────────────────────────────
+
+export type ThinkingLevel = "low" | "medium" | "high";
+
+// ── Content Types ──────────────────────────────────────────
+
+export interface TextContent {
+  type: "text";
+  text: string;
+}
+
+export interface ThinkingContent {
+  type: "thinking";
+  text: string;
+}
+
+export interface ImageContent {
+  type: "image";
+  mediaType: string;
+  data: string; // base64
+}
+
+export interface ToolCall {
+  type: "tool_call";
+  id: string;
+  name: string;
+  args: Record<string, unknown>;
+}
+
+export interface ToolResult {
+  type: "tool_result";
+  toolCallId: string;
+  content: string;
+  isError?: boolean;
+}
+
+export type ContentPart = TextContent | ThinkingContent | ImageContent | ToolCall;
+
+// ── Messages ───────────────────────────────────────────────
+
+export interface SystemMessage {
+  role: "system";
+  content: string;
+}
+
+export interface UserMessage {
+  role: "user";
+  content: string | (TextContent | ImageContent)[];
+}
+
+export interface AssistantMessage {
+  role: "assistant";
+  content: string | ContentPart[];
+}
+
+export interface ToolResultMessage {
+  role: "tool";
+  content: ToolResult[];
+}
+
+export type Message = SystemMessage | UserMessage | AssistantMessage | ToolResultMessage;
+
+// ── Tools ──────────────────────────────────────────────────
+
+export interface Tool {
+  name: string;
+  description: string;
+  parameters: z.ZodType;
+}
+
+export type ToolChoice = "auto" | "none" | "required" | { name: string };
+
+// ── Stream Events ──────────────────────────────────────────
+
+export interface TextDeltaEvent {
+  type: "text_delta";
+  text: string;
+}
+
+export interface ThinkingDeltaEvent {
+  type: "thinking_delta";
+  text: string;
+}
+
+export interface ToolCallDeltaEvent {
+  type: "toolcall_delta";
+  id: string;
+  name: string;
+  argsJson: string;
+}
+
+export interface ToolCallDoneEvent {
+  type: "toolcall_done";
+  id: string;
+  name: string;
+  args: Record<string, unknown>;
+}
+
+export interface DoneEvent {
+  type: "done";
+  stopReason: StopReason;
+}
+
+export interface ErrorEvent {
+  type: "error";
+  error: Error;
+}
+
+export type StreamEvent =
+  | TextDeltaEvent
+  | ThinkingDeltaEvent
+  | ToolCallDeltaEvent
+  | ToolCallDoneEvent
+  | DoneEvent
+  | ErrorEvent;
+
+// ── Stop Reasons ───────────────────────────────────────────
+
+export type StopReason = "end_turn" | "tool_use" | "max_tokens" | "error";
+
+// ── Response ───────────────────────────────────────────────
+
+export interface StreamResponse {
+  message: AssistantMessage;
+  stopReason: StopReason;
+  usage: Usage;
+}
+
+export interface Usage {
+  inputTokens: number;
+  outputTokens: number;
+}
+
+// ── Stream Options ─────────────────────────────────────────
+
+export interface StreamOptions {
+  provider: Provider;
+  model: string;
+  messages: Message[];
+  tools?: Tool[];
+  toolChoice?: ToolChoice;
+  maxTokens?: number;
+  temperature?: number;
+  topP?: number;
+  stop?: string[];
+  thinking?: ThinkingLevel;
+  apiKey?: string;
+  baseUrl?: string;
+  signal?: AbortSignal;
+  /** OpenAI ChatGPT account ID (from OAuth JWT) for codex endpoint */
+  accountId?: string;
+}

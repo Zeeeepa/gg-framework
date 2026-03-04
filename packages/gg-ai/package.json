@@ -1,0 +1,35 @@
+{
+  "name": "@kenkaiiii/gg-ai",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Unified LLM streaming API for Anthropic and OpenAI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kenkaiiii/gg-coder",
+    "directory": "packages/gg-ai"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "openai": "^6.25.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

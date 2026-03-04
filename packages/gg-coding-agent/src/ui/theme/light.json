@@ -1,0 +1,23 @@
+{
+  "name": "light",
+  "primary": "#2563eb",
+  "secondary": "#7c3aed",
+  "success": "#16a34a",
+  "error": "#dc2626",
+  "warning": "#d97706",
+  "text": "#1f2937",
+  "textDim": "#9ca3af",
+  "textMuted": "#6b7280",
+  "border": "#d1d5db",
+  "background": "",
+  "accent": "#4f46e5",
+  "toolName": "#2563eb",
+  "toolSuccess": "#16a34a",
+  "toolError": "#dc2626",
+  "diffAdded": "#16a34a",
+  "diffRemoved": "#dc2626",
+  "diffContext": "#9ca3af",
+  "spinnerColor": "#2563eb",
+  "inputPrompt": "#2563eb",
+  "footerText": "#9ca3af"
+}

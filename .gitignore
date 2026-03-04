@@ -1,0 +1,19 @@
+node_modules/
+dist/
+*.tgz
+
+# Auth & secrets
+.env
+.env.*
+~/.gg/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# npm
+.npmrc

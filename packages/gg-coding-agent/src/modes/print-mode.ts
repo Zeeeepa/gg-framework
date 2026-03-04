@@ -1,0 +1,57 @@
+import { AgentSession, type AgentSessionOptions } from "../core/agent-session.js";
+import { formatUserError } from "../utils/error-handler.js";
+import type { Provider, ThinkingLevel } from "@kenkaiiii/gg-ai";
+
+export interface PrintModeOptions {
+  message: string;
+  provider: Provider;
+  model: string;
+  baseUrl?: string;
+  systemPrompt?: string;
+  cwd: string;
+  thinkingLevel?: ThinkingLevel;
+}
+
+export async function runPrintMode(options: PrintModeOptions): Promise<void> {
+  const ac = new AbortController();
+
+  const onSigint = () => ac.abort();
+  process.on("SIGINT", onSigint);
+
+  const sessionOpts: AgentSessionOptions = {
+    provider: options.provider,
+    model: options.model,
+    baseUrl: options.baseUrl,
+    systemPrompt: options.systemPrompt,
+    cwd: options.cwd,
+    thinkingLevel: options.thinkingLevel,
+    signal: ac.signal,
+  };
+
+  const session = new AgentSession(sessionOpts);
+
+  // Subscribe to events
+  session.eventBus.on("text_delta", ({ text }) => {
+    process.stdout.write(text);
+  });
+
+  session.eventBus.on("error", ({ error }) => {
+    process.stderr.write(`Error: ${error.message}\n`);
+  });
+
+  try {
+    await session.initialize();
+    await session.prompt(options.message);
+    process.stdout.write("\n");
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      process.stderr.write("\nInterrupted.\n");
+      process.exit(130);
+    }
+    process.stderr.write(formatUserError(err) + "\n");
+    process.exit(1);
+  } finally {
+    process.removeListener("SIGINT", onSigint);
+    await session.dispose();
+  }
+}

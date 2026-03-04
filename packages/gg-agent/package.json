@@ -1,0 +1,34 @@
+{
+  "name": "@kenkaiiii/gg-agent",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Agentic loop system with tool execution for LLMs",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kenkaiiii/gg-coder",
+    "directory": "packages/gg-agent"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kenkaiiii/gg-ai": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

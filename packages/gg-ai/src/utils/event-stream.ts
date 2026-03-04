@@ -1,0 +1,100 @@
+import type { StreamEvent, StreamResponse } from "../types.js";
+
+/**
+ * Push-based async iterable. Producers push events, consumers
+ * iterate with `for await`. Also supports thenable so you can
+ * `await stream(...)` directly to get the final response.
+ */
+export class EventStream<T = StreamEvent> implements AsyncIterable<T> {
+  private queue: T[] = [];
+  private resolve: (() => void) | null = null;
+  private done = false;
+  private error: Error | null = null;
+
+  push(event: T): void {
+    this.queue.push(event);
+    this.resolve?.();
+    this.resolve = null;
+  }
+
+  close(): void {
+    this.done = true;
+    this.resolve?.();
+    this.resolve = null;
+  }
+
+  abort(error: Error): void {
+    this.error = error;
+    this.done = true;
+    this.resolve?.();
+    this.resolve = null;
+  }
+
+  async *[Symbol.asyncIterator](): AsyncIterator<T> {
+    while (true) {
+      while (this.queue.length > 0) {
+        yield this.queue.shift()!;
+      }
+      if (this.error) throw this.error;
+      if (this.done) return;
+      await new Promise<void>((r) => {
+        this.resolve = r;
+      });
+    }
+  }
+}
+
+/**
+ * Wraps EventStream and adds a `.response` promise that resolves
+ * to the final StreamResponse. Also implements thenable so:
+ *
+ *   const msg = await stream({...})          // awaits response
+ *   for await (const e of stream({...})) {}  // iterates events
+ */
+export class StreamResult implements AsyncIterable<StreamEvent> {
+  readonly events: EventStream<StreamEvent>;
+  readonly response: Promise<StreamResponse>;
+  private resolveResponse!: (r: StreamResponse) => void;
+  private rejectResponse!: (e: Error) => void;
+
+  constructor() {
+    this.events = new EventStream<StreamEvent>();
+    this.response = new Promise<StreamResponse>((resolve, reject) => {
+      this.resolveResponse = resolve;
+      this.rejectResponse = reject;
+    });
+  }
+
+  push(event: StreamEvent): void {
+    this.events.push(event);
+  }
+
+  complete(response: StreamResponse): void {
+    this.events.close();
+    this.resolveResponse(response);
+  }
+
+  abort(error: Error): void {
+    this.events.abort(error);
+    this.rejectResponse(error);
+  }
+
+  [Symbol.asyncIterator](): AsyncIterator<StreamEvent> {
+    return this.events[Symbol.asyncIterator]();
+  }
+
+  then<TResult1 = StreamResponse, TResult2 = never>(
+    onfulfilled?: ((value: StreamResponse) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2> {
+    // Drain events so the stream completes
+    this.drainEvents();
+    return this.response.then(onfulfilled, onrejected);
+  }
+
+  private async drainEvents(): Promise<void> {
+    for await (const _ of this.events) {
+      // consume silently
+    }
+  }
+}

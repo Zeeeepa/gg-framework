@@ -1,0 +1,23 @@
+{
+  "name": "dark",
+  "primary": "#60a5fa",
+  "secondary": "#a78bfa",
+  "success": "#4ade80",
+  "error": "#f87171",
+  "warning": "#fbbf24",
+  "text": "#e5e7eb",
+  "textDim": "#6b7280",
+  "textMuted": "#9ca3af",
+  "border": "#374151",
+  "background": "",
+  "accent": "#818cf8",
+  "toolName": "#60a5fa",
+  "toolSuccess": "#4ade80",
+  "toolError": "#f87171",
+  "diffAdded": "#4ade80",
+  "diffRemoved": "#f87171",
+  "diffContext": "#6b7280",
+  "spinnerColor": "#60a5fa",
+  "inputPrompt": "#60a5fa",
+  "footerText": "#6b7280"
+}
