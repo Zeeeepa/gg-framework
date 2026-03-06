@@ -251,7 +251,10 @@ async function runInkTUI(opts: {
 
   // Build system prompt & tools (with sub-agent support)
   const systemPrompt = opts.systemPrompt ?? (await buildSystemPrompt(cwd));
-  const tools = createTools(cwd, { agents, provider, model });
+  const { tools, processManager } = createTools(cwd, { agents, provider, model });
+
+  // Kill all background processes on exit (synchronous — catches all exit paths)
+  process.on("exit", () => processManager.shutdownAll());
 
   // Seed messages with system prompt
   const messages: Message[] = [{ role: "system" as const, content: systemPrompt }];
@@ -318,6 +321,7 @@ async function runInkTUI(opts: {
     initialHistory,
     sessionsDir: paths.sessionsDir,
     sessionPath,
+    processManager,
   });
 
   closeLogger();

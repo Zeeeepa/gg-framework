@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import type { AgentTool } from "@kenkaiiii/gg-agent";
+import type { ProcessManager } from "../core/process-manager.js";
 import { killProcessTree } from "../utils/process.js";
 import { truncateTail } from "./truncate.js";
 
@@ -17,17 +18,40 @@ const BashParams = z.object({
     .min(1000)
     .optional()
     .describe("Timeout in milliseconds (default: 120000)"),
+  run_in_background: z
+    .boolean()
+    .optional()
+    .describe(
+      "Run the command in the background. Returns a process ID immediately. " +
+        "Use task_output to read output and task_stop to stop it.",
+    ),
 });
 
-export function createBashTool(cwd: string): AgentTool<typeof BashParams> {
+export function createBashTool(
+  cwd: string,
+  processManager: ProcessManager,
+): AgentTool<typeof BashParams> {
   return {
     name: "bash",
     description:
       "Execute a bash command. Returns exit code and combined stdout/stderr. " +
       "Commands run in a non-interactive bash shell with TERM=dumb. " +
-      "Long output is truncated (tail kept).",
+      "Long output is truncated (tail kept). " +
+      "Set run_in_background=true for long-running processes (dev servers, watchers). " +
+      "Use task_output/task_stop to interact with background processes.",
     parameters: BashParams,
-    async execute({ command, timeout: timeoutMs }, context) {
+    async execute({ command, timeout: timeoutMs, run_in_background }, context) {
+      if (run_in_background) {
+        const result = await processManager.start(command, cwd);
+        return (
+          `Background process started.\n` +
+          `ID: ${result.id}\n` +
+          `PID: ${result.pid}\n` +
+          `Log: ${result.logFile}\n` +
+          `Use task_output with id="${result.id}" to read output.`
+        );
+      }
+
       const effectiveTimeout = timeoutMs ?? DEFAULT_TIMEOUT;
 
       return new Promise<string>((resolve) => {

@@ -16,7 +16,7 @@ import { getContextWindow, MODELS } from "./model-registry.js";
 import { discoverSkills, type Skill } from "./skills.js";
 import { ensureAppDirs } from "../config.js";
 import { buildSystemPrompt } from "../system-prompt.js";
-import { createTools } from "../tools/index.js";
+import { createTools, type ProcessManager } from "../tools/index.js";
 import crypto from "node:crypto";
 
 // ── Options ────────────────────────────────────────────────
@@ -59,6 +59,7 @@ export class AgentSession {
   private messages: Message[] = [];
   private tools: AgentTool[] = [];
   private skills: Skill[] = [];
+  private processManager?: ProcessManager;
 
   private provider: Provider;
   private model: string;
@@ -109,7 +110,9 @@ export class AgentSession {
     this.messages = [{ role: "system", content: basePrompt }];
 
     // Create tools
-    this.tools = createTools(this.cwd);
+    const { tools, processManager } = createTools(this.cwd);
+    this.tools = tools;
+    this.processManager = processManager;
 
     // Load or create session
     if (this.opts.sessionId) {
@@ -279,6 +282,7 @@ export class AgentSession {
   }
 
   async dispose(): Promise<void> {
+    this.processManager?.shutdownAll();
     await this.extensionLoader.deactivateAll();
   }
 

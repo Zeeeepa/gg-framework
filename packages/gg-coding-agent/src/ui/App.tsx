@@ -16,6 +16,8 @@ import { InputArea } from "./components/InputArea.js";
 import { Footer } from "./components/Footer.js";
 import { Banner } from "./components/Banner.js";
 import { ModelSelector } from "./components/ModelSelector.js";
+import { BackgroundTasksBar } from "./components/BackgroundTasksBar.js";
+import type { ProcessManager, BackgroundProcess } from "../core/process-manager.js";
 import { useTheme } from "./theme/theme.js";
 import { useTerminalTitle } from "./hooks/useTerminalTitle.js";
 import { getGitBranch } from "../utils/git.js";
@@ -182,6 +184,7 @@ export interface AppProps {
   initialHistory?: CompletedItem[];
   sessionsDir?: string;
   sessionPath?: string;
+  processManager?: ProcessManager;
 }
 
 // ── App Component ──────────────────────────────────────────
@@ -248,6 +251,69 @@ export function App(props: AppProps) {
     }
     persistedIndexRef.current = allMsgs.length;
   }, [props.sessionPath]);
+
+  // ── Background task bar state ───────────────────────────
+  const [bgTasks, setBgTasks] = useState<BackgroundProcess[]>([]);
+  const [taskBarFocused, setTaskBarFocused] = useState(false);
+  const [taskBarExpanded, setTaskBarExpanded] = useState(false);
+  const [selectedTaskIndex, setSelectedTaskIndex] = useState(0);
+
+  // Poll ProcessManager every 2s for running tasks
+  useEffect(() => {
+    if (!props.processManager) return;
+    const pm = props.processManager;
+    const poll = () => {
+      const running = pm.list().filter((p) => p.exitCode === null);
+      setBgTasks(running);
+    };
+    poll();
+    const interval = setInterval(poll, 2000);
+    return () => clearInterval(interval);
+  }, [props.processManager]);
+
+  // Auto-exit task panel when all tasks gone
+  useEffect(() => {
+    if (bgTasks.length === 0) {
+      setTaskBarFocused(false);
+      setTaskBarExpanded(false);
+    }
+    // Clamp selected index
+    const maxIdx = Math.min(bgTasks.length, 5) - 1;
+    if (selectedTaskIndex > maxIdx && maxIdx >= 0) {
+      setSelectedTaskIndex(maxIdx);
+    }
+  }, [bgTasks.length, selectedTaskIndex]);
+
+  const handleFocusTaskBar = useCallback(() => {
+    if (bgTasks.length > 0) {
+      setTaskBarFocused(true);
+    }
+  }, [bgTasks.length]);
+
+  const handleTaskBarExit = useCallback(() => {
+    setTaskBarFocused(false);
+    setTaskBarExpanded(false);
+  }, []);
+
+  const handleTaskBarExpand = useCallback(() => {
+    setTaskBarExpanded(true);
+    setSelectedTaskIndex(0);
+  }, []);
+
+  const handleTaskBarCollapse = useCallback(() => {
+    setTaskBarExpanded(false);
+  }, []);
+
+  const handleTaskKill = useCallback(
+    (id: string) => {
+      props.processManager?.stop(id);
+    },
+    [props.processManager],
+  );
+
+  const handleTaskNavigate = useCallback((index: number) => {
+    setSelectedTaskIndex(index);
+  }, []);
 
   const agentLoop = useAgentLoop(
     messagesRef,
@@ -691,7 +757,13 @@ export function App(props: AppProps) {
       )}
 
       {/* Input + Footer/ModelSelector pinned at bottom */}
-      <InputArea onSubmit={handleSubmit} onAbort={handleAbort} disabled={agentLoop.isRunning} />
+      <InputArea
+        onSubmit={handleSubmit}
+        onAbort={handleAbort}
+        disabled={agentLoop.isRunning}
+        isActive={!taskBarFocused}
+        onDownAtEnd={handleFocusTaskBar}
+      />
       {overlay === "model" ? (
         <ModelSelector
           onSelect={handleModelSelect}
@@ -707,6 +779,19 @@ export function App(props: AppProps) {
           cwd={props.cwd}
           gitBranch={gitBranch}
           turnTokenHistory={agentLoop.turnTokenHistory}
+        />
+      )}
+      {bgTasks.length > 0 && (
+        <BackgroundTasksBar
+          tasks={bgTasks}
+          focused={taskBarFocused}
+          expanded={taskBarExpanded}
+          selectedIndex={selectedTaskIndex}
+          onExpand={handleTaskBarExpand}
+          onCollapse={handleTaskBarCollapse}
+          onKill={handleTaskKill}
+          onExit={handleTaskBarExit}
+          onNavigate={handleTaskNavigate}
         />
       )}
     </Box>

@@ -55,11 +55,13 @@ export async function buildSystemPrompt(cwd: string, skills?: Skill[]): Promise<
       `- **read**: Read a file before editing it. Use offset/limit for large files. Always read before edit.\n` +
       `- **edit**: Surgical changes to existing files. The old_text must uniquely match one location.\n` +
       `- **write**: Create new files or complete rewrites. Prefer edit for small changes.\n` +
-      `- **bash**: Run commands (tests, builds, git, installs). Check exit code and output for errors. Never run commands that require interactive confirmation (e.g. y/n prompts) — use force flags or non-interactive alternatives instead (e.g. \`rm -f\` not \`rm -i\`, \`yes |\` prefix, \`--yes\`/\`--force\` flags).\n` +
+      `- **bash**: Run commands (tests, builds, git, installs). Check exit code and output for errors. Never run commands that require interactive confirmation (e.g. y/n prompts) — use force flags or non-interactive alternatives instead (e.g. \`rm -f\` not \`rm -i\`, \`yes |\` prefix, \`--yes\`/\`--force\` flags). Set \`run_in_background=true\` for long-running processes (dev servers, watchers, file watchers) — returns a process ID immediately.\n` +
       `- **find**: Discover project structure before diving into code. Map out directories and files.\n` +
       `- **grep**: Find usages, definitions, and imports across the codebase. Use to understand how code connects.\n` +
       `- **ls**: Understand project layout at a glance. Good for orienting in unfamiliar directories.\n` +
       `- **web_fetch**: Read documentation, check live endpoints, fetch external resources.\n` +
+      `- **task_output**: Read output from a background process by ID. Returns new output since last read (incremental). Use \`from_start=true\` to read from the beginning.\n` +
+      `- **task_stop**: Stop a background process by ID. Sends SIGTERM, then SIGKILL after 5 seconds.\n` +
       `- **subagent**: Delegate focused, isolated subtasks (research, parallel exploration, independent fixes).`,
   );
 

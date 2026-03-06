@@ -2,6 +2,7 @@ import React from "react";
 import { render } from "ink";
 import type { Message, Provider, ServerToolDefinition, ThinkingLevel } from "@kenkaiiii/gg-ai";
 import type { AgentTool } from "@kenkaiiii/gg-agent";
+import type { ProcessManager } from "../core/process-manager.js";
 import { App, type CompletedItem } from "./App.js";
 import { ThemeContext, loadTheme } from "./theme/theme.js";
 
@@ -27,6 +28,7 @@ export interface RenderAppConfig {
   initialHistory?: CompletedItem[];
   sessionsDir?: string;
   sessionPath?: string;
+  processManager?: ProcessManager;
 }
 
 export async function renderApp(config: RenderAppConfig): Promise<void> {
@@ -57,6 +59,7 @@ export async function renderApp(config: RenderAppConfig): Promise<void> {
         initialHistory: config.initialHistory,
         sessionsDir: config.sessionsDir,
         sessionPath: config.sessionPath,
+        processManager: config.processManager,
       }),
     ),
   );

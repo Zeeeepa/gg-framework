@@ -29,7 +29,8 @@ export async function runInteractive(config: CliConfig): Promise<void> {
   const systemPrompt = config.systemPrompt ?? (await buildSystemPrompt(cwd));
 
   // Create tools
-  const tools = createTools(cwd);
+  const { tools, processManager } = createTools(cwd);
+  process.on("exit", () => processManager.shutdownAll());
 
   // Load auth
   const paths = await ensureAppDirs();

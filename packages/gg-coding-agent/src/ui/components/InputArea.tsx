@@ -9,6 +9,8 @@ interface InputAreaProps {
   onSubmit: (value: string) => void;
   onAbort: () => void;
   disabled?: boolean;
+  isActive?: boolean;
+  onDownAtEnd?: () => void;
 }
 
 // Border (1 each side) + padding (1 each side) = 4 characters of overhead
@@ -57,7 +59,13 @@ function getVisualLines(text: string, columns: number): string[] {
   return result;
 }
 
-export function InputArea({ onSubmit, onAbort, disabled = false }: InputAreaProps) {
+export function InputArea({
+  onSubmit,
+  onAbort,
+  disabled = false,
+  isActive = true,
+  onDownAtEnd,
+}: InputAreaProps) {
   const theme = useTheme();
   const [value, setValue] = useState("");
   const historyRef = useRef<string[]>([]);
@@ -123,7 +131,10 @@ export function InputArea({ onSubmit, onAbort, disabled = false }: InputAreaProp
 
       if (key.downArrow) {
         const history = historyRef.current;
-        if (historyIndexRef.current === -1) return;
+        if (historyIndexRef.current === -1) {
+          if (onDownAtEnd) onDownAtEnd();
+          return;
+        }
         const newIndex = historyIndexRef.current + 1;
         if (newIndex >= history.length) {
           historyIndexRef.current = -1;
@@ -152,7 +163,7 @@ export function InputArea({ onSubmit, onAbort, disabled = false }: InputAreaProp
         setValue((v) => v + input);
       }
     },
-    { isActive: true },
+    { isActive },
   );
 
   // Calculate visual lines and cap at MAX_VISIBLE_LINES (scroll to bottom)
