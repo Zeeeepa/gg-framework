@@ -58,7 +58,7 @@ export function useAgentLoop(
   options: AgentLoopOptions,
   callbacks?: {
     onComplete?: (newMessages: Message[]) => void;
-    onTurnText?: (text: string, thinking: string) => void;
+    onTurnText?: (text: string, thinking: string, thinkingMs: number) => void;
     onToolStart?: (toolCallId: string, name: string, args: Record<string, unknown>) => void;
     onToolUpdate?: (toolCallId: string, update: unknown) => void;
     onToolEnd?: (
@@ -353,7 +353,11 @@ export function useAgentLoop(
               // Flush all pending text before completing turn
               flushAllText();
               if (textVisibleRef.current) {
-                onTurnText?.(textVisibleRef.current, thinkingBufferRef.current);
+                onTurnText?.(
+                  textVisibleRef.current,
+                  thinkingBufferRef.current,
+                  thinkingAccumRef.current,
+                );
               }
               // Reset streaming buffers for next turn
               textPendingRef.current = "";

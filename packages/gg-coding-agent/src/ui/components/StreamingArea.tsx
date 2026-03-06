@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Text, Box } from "ink";
 import { useTheme } from "../theme/theme.js";
 import { Markdown } from "./Markdown.js";
+import { ThinkingBlock } from "./ThinkingBlock.js";
 
 interface StreamingAreaProps {
   isRunning: boolean;
   streamingText: string;
   streamingThinking: string;
   showThinking?: boolean;
+  thinkingMs?: number;
 }
 
 export function StreamingArea({
@@ -15,6 +17,7 @@ export function StreamingArea({
   streamingText,
   streamingThinking,
   showThinking = true,
+  thinkingMs,
 }: StreamingAreaProps) {
   const theme = useTheme();
 
@@ -34,11 +37,7 @@ export function StreamingArea({
   return (
     <Box flexDirection="column" marginTop={1}>
       {showThinking && streamingThinking && (
-        <Box marginBottom={1}>
-          <Text color={theme.textDim} italic>
-            {streamingThinking}
-          </Text>
-        </Box>
+        <ThinkingBlock text={streamingThinking} streaming durationMs={thinkingMs} />
       )}
 
       {streamingText && (

@@ -47,6 +47,7 @@ interface AssistantItem {
   kind: "assistant";
   text: string;
   thinking?: string;
+  thinkingMs?: number;
   id: string;
 }
 
@@ -354,8 +355,11 @@ export function App(props: AppProps) {
       onComplete: useCallback(() => {
         persistNewMessages();
       }, [persistNewMessages]),
-      onTurnText: useCallback((text: string, thinking: string) => {
-        setLiveItems((prev) => [...prev, { kind: "assistant", text, thinking, id: getId() }]);
+      onTurnText: useCallback((text: string, thinking: string, thinkingMs: number) => {
+        setLiveItems((prev) => [
+          ...prev,
+          { kind: "assistant", text, thinking, thinkingMs, id: getId() },
+        ]);
       }, []),
       onToolStart: useCallback(
         (toolCallId: string, name: string, args: Record<string, unknown>) => {
@@ -768,6 +772,7 @@ export function App(props: AppProps) {
             key={item.id}
             text={item.text}
             thinking={item.thinking}
+            thinkingMs={item.thinkingMs}
             showThinking={props.showThinking}
           />
         );
@@ -849,6 +854,7 @@ export function App(props: AppProps) {
           streamingText={agentLoop.streamingText}
           streamingThinking={agentLoop.streamingThinking}
           showThinking={props.showThinking}
+          thinkingMs={agentLoop.thinkingMs}
         />
       </Box>
 

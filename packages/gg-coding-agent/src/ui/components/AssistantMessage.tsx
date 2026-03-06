@@ -2,25 +2,26 @@ import React from "react";
 import { Text, Box } from "ink";
 import { useTheme } from "../theme/theme.js";
 import { Markdown } from "./Markdown.js";
+import { ThinkingBlock } from "./ThinkingBlock.js";
 
 interface AssistantMessageProps {
   text: string;
   thinking?: string;
+  thinkingMs?: number;
   showThinking?: boolean;
 }
 
-export function AssistantMessage({ text, thinking, showThinking = true }: AssistantMessageProps) {
+export function AssistantMessage({
+  text,
+  thinking,
+  thinkingMs,
+  showThinking = true,
+}: AssistantMessageProps) {
   const theme = useTheme();
 
   return (
     <Box flexDirection="column" marginTop={1}>
-      {showThinking && thinking && (
-        <Box marginBottom={1}>
-          <Text color={theme.textDim} italic>
-            {thinking.length > 500 ? thinking.slice(0, 497) + "..." : thinking}
-          </Text>
-        </Box>
-      )}
+      {showThinking && thinking && <ThinkingBlock text={thinking} durationMs={thinkingMs} />}
       {text && (
         <Box flexShrink={1}>
           <Text color={theme.primary}>{"⏺ "}</Text>
