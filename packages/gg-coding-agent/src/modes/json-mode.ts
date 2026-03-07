@@ -1,8 +1,7 @@
 import type { Provider, ThinkingLevel } from "@kenkaiiii/gg-ai";
 import { AgentSession } from "../core/agent-session.js";
 import { formatUserError } from "../utils/error-handler.js";
-import { initLogger, log, attachToEventBus, closeLogger } from "../core/logger.js";
-import { getAppPaths } from "../config.js";
+import { closeLogger } from "../core/logger.js";
 
 export interface JsonModeOptions {
   message: string;
@@ -20,9 +19,8 @@ function emitJson(payload: Record<string, unknown>): void {
 }
 
 export async function runJsonMode(options: JsonModeOptions): Promise<void> {
-  const paths = getAppPaths();
-  initLogger(paths.logFile, { provider: options.provider, model: options.model });
-  log("INFO", "startup", "JSON mode started");
+  // No logger in JSON mode — subagent events are forwarded to parent via NDJSON stdout.
+  // Opening the shared log file here caused corruption from concurrent child process writes.
 
   const ac = new AbortController();
   const onSigint = () => ac.abort();
@@ -41,7 +39,6 @@ export async function runJsonMode(options: JsonModeOptions): Promise<void> {
   };
 
   const session = new AgentSession(sessionOpts);
-  attachToEventBus(session.eventBus);
 
   // Forward all agent events as NDJSON to stdout
   session.eventBus.on("text_delta", (payload) => {
