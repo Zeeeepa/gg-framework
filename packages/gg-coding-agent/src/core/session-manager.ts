@@ -92,7 +92,7 @@ export interface SessionInfo {
 // ── Session Manager ────────────────────────────────────────
 
 function encodeCwd(cwd: string): string {
-  return cwd.replace(/\//g, "_").replace(/^_/, "");
+  return cwd.replace(/[\\/]/g, "_").replace(/:/g, "").replace(/^_/, "");
 }
 
 export class SessionManager {

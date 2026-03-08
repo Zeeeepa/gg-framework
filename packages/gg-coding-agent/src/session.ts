@@ -8,7 +8,7 @@ import type { SessionHeader, SessionMessageEntry, SessionEntry, SessionInfo } fr
 const SESSION_DIR = path.join(os.homedir(), ".gg", "sessions");
 
 function encodeCwd(cwd: string): string {
-  return cwd.replace(/\//g, "_").replace(/^_/, "");
+  return cwd.replace(/[\\/]/g, "_").replace(/:/g, "").replace(/^_/, "");
 }
 
 function sessionDirForCwd(cwd: string): string {
